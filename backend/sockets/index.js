@@ -14,14 +14,14 @@ export const initSocket = (server) => {
         }
     })
 
-    
+
     const userSocketMap = new Map();
 
     const emitRoomUsers = (code) => {
         const users = [];
         userSocketMap.forEach((val) => {
             if (val.roomCode === code && !users.some(u => u.userId === val.userId.toString())) {
-                users.push({ userId: val.userId.toString(), username: val.username });
+                users.push({ userId: val.userId.toString(), username: val.username, inVoice: val.inVoice || false });
             }
         });
         io.to(code).emit("roomUsers", users);
@@ -54,7 +54,7 @@ export const initSocket = (server) => {
             }
 
             socket.join(code);
-            userSocketMap.set(socket.id, { userId: user._id, username: user.username, roomCode: code });
+            userSocketMap.set(socket.id, { userId: user._id, username: user.username, roomCode: code, inVoice: false });
 
             socket.to(code).emit("userjoined", { username: user.username, message: `${user.username} has joined the room.` });
             emitRoomUsers(code);
@@ -90,10 +90,85 @@ export const initSocket = (server) => {
             socket.to(room).emit('typing', { username: user.username, isTyping });
         }, socket));
 
+        // --- WebRTC Voice Chat Signaling ---
+
+        // 1. User wants to enter voice chat
+        socket.on("joinVoice", ({ room }) => {
+            const userData = userSocketMap.get(socket.id);
+            if (!userData || userData.roomCode !== room) return;
+
+            // Count how many people are currently in voice in this room
+            let voiceCount = 0;
+            userSocketMap.forEach((val) => {
+                if (val.roomCode === room && val.inVoice) {
+                    voiceCount++;
+                }
+            });
+
+            if (voiceCount >= 6) {
+                // Reject connection if room is full
+                socket.emit("voiceError", { message: "Voice channel is full (max 6 users)." });
+                return;
+            }
+
+            // Mark user as in voice
+            userData.inVoice = true;
+            userSocketMap.set(socket.id, userData);
+
+            // Tell others in the room that this user joined voice
+            socket.to(room).emit("userJoinedVoice", {
+                socketId: socket.id,
+                userId: userData.userId.toString(),
+                username: userData.username
+            });
+
+            // Update main user list to reflect Voice status
+            emitRoomUsers(room);
+        });
+
+        // 2. Relay SDP Offer
+        socket.on("webrtc-offer", ({ offer, to }) => {
+            socket.to(to).emit("webrtc-offer", {
+                offer,
+                from: socket.id
+            });
+        });
+
+        // 3. Relay SDP Answer
+        socket.on("webrtc-answer", ({ answer, to }) => {
+            socket.to(to).emit("webrtc-answer", {
+                answer,
+                from: socket.id
+            });
+        });
+
+        // 4. Relay ICE Candidates
+        socket.on("webrtc-ice-candidate", ({ candidate, to }) => {
+            socket.to(to).emit("webrtc-ice-candidate", {
+                candidate,
+                from: socket.id
+            });
+        });
+
+        // 5. User manually leaves voice chat
+        socket.on("leaveVoice", ({ room }) => {
+            const userData = userSocketMap.get(socket.id);
+            if (userData) {
+                userData.inVoice = false;
+                userSocketMap.set(socket.id, userData);
+            }
+
+            socket.to(room).emit("userLeftVoice", { socketId: socket.id });
+            emitRoomUsers(room);
+        });
+
         socket.on('disconnect', () => {
             console.log('❌ socket disconnected:', socket.id);
             const userData = userSocketMap.get(socket.id);
             if (userData) {
+                if (userData.inVoice) {
+                    socket.to(userData.roomCode).emit("userLeftVoice", { socketId: socket.id });
+                }
                 userSocketMap.delete(socket.id);
                 emitRoomUsers(userData.roomCode);
             }
