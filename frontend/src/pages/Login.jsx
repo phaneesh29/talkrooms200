@@ -2,11 +2,12 @@ import React from 'react'
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { Mail, Lock, Eye, EyeOff, Loader2, MessageSquare } from 'lucide-react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useLocation } from 'react-router'
 import axios from '../utils/axios'
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState({
     email: "",
     password: ""
@@ -25,7 +26,8 @@ const Login = () => {
       const response = await axios.post('/auth/login', user)
       if (response.status === 200) {
         toast.success(response.data.message)
-        navigate('/')
+        const from = location.state?.from || '/'
+        navigate(from)
       }
 
     } catch (error) {
@@ -114,7 +116,7 @@ const Login = () => {
           <div className="text-center mt-6">
             <p className="text-sm text-gray-400">
               Don't have an account?{' '}
-              <Link className='text-purple-400 font-semibold hover:text-purple-300 transition-colors' to="/register">
+              <Link className='text-purple-400 font-semibold hover:text-purple-300 transition-colors' to="/register" state={{ from: location.state?.from }}>
                 Register here
               </Link>
             </p>

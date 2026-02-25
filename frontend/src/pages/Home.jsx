@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { toast } from 'react-hot-toast';
 import axios from '../utils/axios';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useLocation } from 'react-router';
 import { Loader2, LogOut, MessageSquarePlus, Globe2, Edit2, Trash2 } from 'lucide-react';
 import socket from '../utils/socket'
 import Modal from '../components/Modal';
@@ -11,6 +11,7 @@ import SystemStatus from '../components/SystemStatus';
 
 const Home = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState({})
   const [loading, setLoading] = useState(true)
   const [roomName, setRoomName] = useState("");
@@ -50,7 +51,7 @@ const Home = () => {
         }
       }
       toast.error("Unauthorized! Please login again.");
-      navigate("/login")
+      navigate("/login", { state: { from: location.pathname } })
     } finally {
       setLoading(false);
     }

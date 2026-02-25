@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useLocation } from 'react-router'
 import socket from '../utils/socket'
 import { Loader2, Send, ArrowLeft, Mic, MicOff, Phone, PhoneOff, Copy } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -9,6 +9,7 @@ import SystemStatus from '../components/SystemStatus'
 const ChatRoom = () => {
   const { room } = useParams()
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState({});
   const [roomData, setRoomData] = useState(null);
   const [loading, setLoading] = useState(false)
@@ -95,7 +96,7 @@ const ChatRoom = () => {
         }
       }
       toast.error("Unauthorized! Please login again.");
-      navigate("/login")
+      navigate("/login", { state: { from: location.pathname } })
     } finally {
       setLoading(false);
     }

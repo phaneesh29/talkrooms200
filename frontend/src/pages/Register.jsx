@@ -2,11 +2,12 @@ import React from 'react'
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { Mail, Lock, Eye, EyeOff, Loader2, User2, MessageSquare } from 'lucide-react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useLocation } from 'react-router'
 import axios from '../utils/axios'
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState({
     username: "",
     email: "",
@@ -26,7 +27,7 @@ const Register = () => {
       const response = await axios.post('/auth/register', user)
       if (response.status === 201) {
         toast.success(response.data.message)
-        navigate('/login')
+        navigate('/login', { state: { from: location.state?.from } })
       }
 
     } catch (error) {
