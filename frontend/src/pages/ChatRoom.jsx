@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import socket from '../utils/socket'
-import { Loader2, Send, ArrowLeft, Mic, MicOff, Phone, PhoneOff } from 'lucide-react'
+import { Loader2, Send, ArrowLeft, Mic, MicOff, Phone, PhoneOff, Copy } from 'lucide-react'
 import toast from 'react-hot-toast'
 import axios from '../utils/axios'
+import SystemStatus from '../components/SystemStatus'
 
 const ChatRoom = () => {
   const { room } = useParams()
@@ -25,6 +26,40 @@ const ChatRoom = () => {
   const localStreamRef = useRef(null);
   const peerConnectionsRef = useRef({}); // socketId -> RTCPeerConnection
   const audioElementsRef = useRef({}); // socketId -> <audio> element reference
+
+  // Audio Context for Chimes
+  const playChime = (type) => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      if (type === 'join') {
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+        oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'leave') {
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+        oscillator.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.1); // A3
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.3);
+      }
+    } catch (e) {
+      console.warn("AudioContext not supported or blocked");
+    }
+  };
 
   const refreshToken = async () => {
     try {
@@ -263,6 +298,7 @@ const ChatRoom = () => {
       toast(message, {
         icon: '👋',
       });
+      playChime('join');
     };
 
     const handleTyping = ({ username, isTyping }) => {
@@ -274,7 +310,13 @@ const ChatRoom = () => {
     }
 
     const handleRoomUsers = (users) => {
-      setOnlineUsers(users);
+      setOnlineUsers((prev) => {
+        // Play leave chime if someone left (and it's not the initial load)
+        if (prev.length > 0 && users.length < prev.length) {
+          playChime('leave');
+        }
+        return users;
+      });
       // Filter out users who are explicitly marked as inVoice
       const vUsers = users.filter(u => u.inVoice);
       setVoiceUsers(vUsers);
@@ -415,83 +457,120 @@ const ChatRoom = () => {
       <div className="glow-blob bg-purple-600/10 w-[500px] h-[500px] top-[-100px] left-[-100px] animate-float"></div>
 
       {/* Header */}
-      <header className="flex-none z-10 glass-panel border-b-0 border-white/5 px-6 py-4 flex items-center justify-between shadow-lg">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/')}
-            className="p-2 -ml-2 rounded-lg text-purple-200/60 hover:text-white hover:bg-white/5 transition-colors"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-white tracking-wide flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              {roomData.name} <span className="ml-2 text-xs bg-purple-600/30 text-purple-200 px-2 py-1 rounded-md">Code: {roomData.code}</span>
-            </h1>
-            <p className="text-xs text-purple-200/50 mt-1">Logged in as <span className="text-purple-300 font-medium">{user.username}</span></p>
-          </div>
-        </div>
-
-        {/* Action Buttons & Users */}
-        <div className="flex items-center gap-4">
-
-          {/* Voice Chat Controls */}
-          <div className="flex items-center gap-2 mr-2">
-            {!inVoice ? (
-              <button
-                onClick={handleJoinVoice}
-                className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 px-4 py-2 rounded-xl transition-all text-sm font-medium"
-              >
-                <Phone size={16} />
-                <span className="hidden sm:inline">Join Voice</span>
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 px-2 py-1.5 rounded-xl">
-                <button
-                  onClick={toggleMute}
-                  className={`p-2 rounded-lg transition-colors ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}
-                  title={isMuted ? "Unmute" : "Mute"}
-                >
-                  {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
-                </button>
-                <button
-                  onClick={handleLeaveVoice}
-                  className="flex items-center gap-2 p-2 px-3 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
-                >
-                  <PhoneOff size={18} />
-                  <span className="hidden sm:inline">Leave</span>
-                </button>
-              </div>
-            )}
+      <header className="flex-none z-10 glass-panel border-b-0 border-white/5 px-4 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-lg gap-3 sm:gap-4">
+        {/* Top/Left Section */}
+        <div className="flex items-start sm:items-center justify-between sm:justify-start w-full sm:w-auto gap-3">
+          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+            <button
+              onClick={() => navigate('/')}
+              className="p-1.5 sm:p-2 -ml-1 sm:-ml-2 rounded-lg text-purple-200/60 hover:text-white hover:bg-white/5 transition-colors shrink-0"
+            >
+              <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base sm:text-xl font-bold text-white tracking-wide flex items-center gap-2">
+                <SystemStatus variant="dot" />
+                <span className="truncate max-w-[150px] sm:max-w-[200px]">{roomData.name}</span>
+              </h1>
+              <p className="text-[10px] sm:text-xs text-purple-200/50 mt-0.5 sm:mt-1 truncate">Logged in as <span className="text-purple-300 font-medium">{user.username}</span></p>
+            </div>
           </div>
 
+          {/* Mobile-only Online Users (top right) */}
           {onlineUsers.length > 0 && (
-            <div className="flex -space-x-2 mr-2 hidden md:flex">
+            <div className="flex -space-x-1.5 sm:hidden shrink-0 items-center mt-1">
               {onlineUsers.slice(0, 3).map((u, i) => (
-                <div key={u.userId || i} className={`group relative w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 border-2 ${u.inVoice ? 'border-green-400' : 'border-purple-900'} flex items-center justify-center text-white text-xs font-bold transition-transform hover:-translate-y-1 cursor-pointer`} style={{ zIndex: 10 - i }}>
+                <div key={u.userId || i} className={`relative w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 border ${u.inVoice ? 'border-green-400' : 'border-purple-900'} flex items-center justify-center text-white text-[9px] font-bold`} style={{ zIndex: 10 - i }}>
                   {u.username.charAt(0).toUpperCase()}
-                  {u.inVoice && <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 border border-purple-900"><Mic size={8} /></div>}
-                  <div className="pointer-events-none absolute top-[calc(100%+8px)] right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/80 backdrop-blur-sm border border-white/10 text-white font-normal text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap shadow-xl z-50 overflow-hidden">
-                    {u.username} {u.inVoice ? '(In Voice)' : ''}
-                  </div>
+                  {u.inVoice && <div className="absolute -bottom-0.5 -right-0.5 bg-green-500 rounded-full p-0.5 border border-purple-900"><Mic size={6} /></div>}
                 </div>
               ))}
               {onlineUsers.length > 3 && (
-                <div className="group relative w-8 h-8 rounded-full bg-white/10 border-2 border-purple-900 flex items-center justify-center text-purple-200 text-xs font-bold z-0 cursor-pointer hover:bg-white/20 transition-colors">
+                <div className="relative w-6 h-6 rounded-full bg-white/10 border border-purple-900 flex items-center justify-center text-purple-200 text-[9px] font-bold z-0">
                   +{onlineUsers.length - 3}
-                  <div className="pointer-events-none absolute top-[calc(100%+8px)] right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/80 backdrop-blur-sm border border-white/10 text-white font-normal text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap shadow-xl z-50 overflow-hidden">
-                    {`${onlineUsers.length - 3} more`}
-                  </div>
                 </div>
               )}
             </div>
           )}
+        </div>
 
+        {/* Bottom/Right Section */}
+        <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-2 sm:gap-4">
+
+          {/* Room Code Badge */}
+          <div className="flex items-center bg-purple-600/30 text-purple-200 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md shrink-0">
+            <span className="text-[10px] sm:text-xs mr-1.5 font-mono">Code: {roomData.code}</span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                toast.success("Join link copied!");
+              }}
+              className="hover:text-white transition-colors p-1 rounded-sm hover:bg-white/10"
+              title="Copy Join Link"
+            >
+              <Copy size={12} className="sm:w-[14px] sm:h-[14px]" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Voice Chat Controls */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {!inVoice ? (
+                <button
+                  onClick={handleJoinVoice}
+                  className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all text-xs sm:text-sm font-medium"
+                >
+                  <Phone size={14} className="sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Join Voice</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 px-2 py-1.5 rounded-xl">
+                  <button
+                    onClick={toggleMute}
+                    className={`p-2 rounded-lg transition-colors ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}
+                    title={isMuted ? "Unmute" : "Mute"}
+                  >
+                    {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
+                  </button>
+                  <button
+                    onClick={handleLeaveVoice}
+                    className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 px-2 sm:px-3 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors text-xs sm:text-sm font-medium"
+                  >
+                    <PhoneOff size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    <span className="hidden sm:inline">Leave</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop-only Online Users */}
+            {onlineUsers.length > 0 && (
+              <div className="hidden sm:flex -space-x-2">
+                {onlineUsers.slice(0, 3).map((u, i) => (
+                  <div key={u.userId || i} className={`group relative w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 border-2 ${u.inVoice ? 'border-green-400' : 'border-purple-900'} flex items-center justify-center text-white text-xs font-bold transition-transform hover:-translate-y-1 cursor-pointer`} style={{ zIndex: 10 - i }}>
+                    {u.username.charAt(0).toUpperCase()}
+                    {u.inVoice && <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 border border-purple-900"><Mic size={8} /></div>}
+                    <div className="pointer-events-none absolute top-[calc(100%+8px)] right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/80 backdrop-blur-sm border border-white/10 text-white font-normal text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap shadow-xl z-50 overflow-hidden">
+                      {u.username} {u.inVoice ? '(In Voice)' : ''}
+                    </div>
+                  </div>
+                ))}
+                {onlineUsers.length > 3 && (
+                  <div className="group relative w-8 h-8 rounded-full bg-white/10 border-2 border-purple-900 flex items-center justify-center text-purple-200 text-xs font-bold z-0 cursor-pointer hover:bg-white/20 transition-colors">
+                    +{onlineUsers.length - 3}
+                    <div className="pointer-events-none absolute top-[calc(100%+8px)] right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/80 backdrop-blur-sm border border-white/10 text-white font-normal text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap shadow-xl z-50 overflow-hidden">
+                      {`${onlineUsers.length - 3} more`}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Main Chat Area */}
-      <main className="flex-1 overflow-hidden w-full max-w-5xl mx-auto flex flex-col relative z-10 p-4 sm:p-6 pb-0">
+      <main className="flex-1 overflow-hidden w-full max-w-5xl mx-auto flex flex-col relative z-10 p-2 sm:p-6 pb-0">
 
         {/* Voice Chat Active Participant Bar (Only show if someone is in voice) */}
         {voiceUsers.length > 0 && (
@@ -513,12 +592,13 @@ const ChatRoom = () => {
               ))}
             </div>
           </div>
-        )}
+        )
+        }
 
         <div className="flex-1 glass-card rounded-t-3xl border-b-0 flex flex-col overflow-hidden shadow-2xl relative">
 
           {/* Messages */}
-          <div className="chat flex-1 overflow-y-auto p-6 flex flex-col gap-6 scroll-smooth">
+          <div className="chat flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 scroll-smooth">
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
                 <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-purple-400/50 mb-2">
@@ -541,7 +621,7 @@ const ChatRoom = () => {
                     )}
                     {!isMe && !showAvatar && <div className="w-11"></div>}
 
-                    <div className={`max-w-[80%] sm:max-w-[70%] rounded-2xl px-5 py-3 relative group ${isMe
+                    <div className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 relative group ${isMe
                       ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-tr-sm shadow-[0_4px_20px_rgba(124,58,237,0.2)]"
                       : "bg-white/10 backdrop-blur-md border border-white/10 text-gray-100 rounded-tl-sm hover:bg-white/15 transition-colors"
                       }`}
@@ -599,21 +679,21 @@ const ChatRoom = () => {
                   onBlur={() => emitTyping(false)}
                   type="text"
                   placeholder="Type your message..."
-                  className="w-full rounded-2xl glass-input py-4 pl-5 pr-12 text-[15px] shadow-inner"
+                  className="w-full rounded-2xl glass-input py-3 sm:py-4 pl-4 sm:pl-5 pr-12 text-[14px] sm:text-[15px] shadow-inner"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!message.trim()}
-                className="h-[56px] w-[56px] shrink-0 rounded-2xl flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-50 disabled:transform-none disabled:shadow-none disabled:cursor-not-allowed"
+                className="h-[48px] w-[48px] sm:h-[56px] sm:w-[56px] shrink-0 rounded-2xl flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-50 disabled:transform-none disabled:shadow-none disabled:cursor-not-allowed"
               >
                 <Send size={20} className={message.trim() ? "translate-x-0.5 -translate-y-0.5 transition-transform" : ""} />
               </button>
             </form>
           </div>
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   )
 }
 

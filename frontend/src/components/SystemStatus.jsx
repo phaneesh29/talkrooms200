@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../utils/axios';
 
-const SystemStatus = () => {
+const SystemStatus = ({ variant = 'footer' }) => {
     const [status, setStatus] = useState('checking'); // 'checking', 'healthy', 'error'
 
     useEffect(() => {
@@ -51,7 +51,7 @@ const SystemStatus = () => {
     const getStatusText = () => {
         switch (status) {
             case 'healthy':
-                return 'System Healthy';
+                return 'All systems are operational'; // Updated text for green state
             case 'error':
                 return 'System Unreachable';
             case 'checking':
@@ -61,13 +61,24 @@ const SystemStatus = () => {
         }
     };
 
+    if (variant === 'dot') {
+        const titleText = getStatusText();
+        return (
+            <div
+                className={`w-1.5 h-1.5 sm:w-2 sm:h-2 shrink-0 rounded-full ${getStatusColor()}`}
+                title={titleText}
+            ></div>
+        );
+    }
+
+    // Default to 'footer' variant
     return (
-        <div className="fixed bottom-4 right-4 z-[100] group flex items-center gap-2.5 bg-black/40 backdrop-blur-md border border-white/10 px-3.5 py-2.5 rounded-full shadow-lg transition-colors hover:bg-black/60 cursor-default">
+        <footer className="w-full py-6 mt-8 flex justify-center items-center gap-2.5 border-t border-white/5 bg-black/20 backdrop-blur-sm z-10 transition-colors cursor-default">
             <div className={`w-2.5 h-2.5 rounded-full ${getStatusColor()}`}></div>
-            <span className="text-xs font-medium text-white/80 group-hover:text-white transition-colors">
+            <span className="text-xs sm:text-sm font-medium text-white/60 hover:text-white/90 transition-colors">
                 {getStatusText()}
             </span>
-        </div>
+        </footer>
     );
 };
 

@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router';
 import { Loader2, LogOut, MessageSquarePlus, Globe2, Edit2, Trash2 } from 'lucide-react';
 import socket from '../utils/socket'
 import Modal from '../components/Modal';
+import SystemStatus from '../components/SystemStatus';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -291,6 +292,9 @@ const Home = () => {
             </form>
           </section>
         </div>
+
+        {/* System Status Footer */}
+        <SystemStatus variant="footer" />
       </div>
     </main>
   )

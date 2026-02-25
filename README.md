@@ -5,6 +5,7 @@ A full-stack, real-time chat room application built with the MERN stack (MongoDB
 ## 🚀 Features
 
 - **Real-time Messaging** – Instant messages via Socket.IO.
+- **Voice/Video Chat** – Peer-to-peer media communication using WebRTC.
 - **User Authentication** – JWT-based signup/login with HTTP-only cookies.
 - **Responsive UI** – Built with React 19 and Tailwind CSS v4.
 - **Form Validation** – Schema-driven validation using Zod.
@@ -19,6 +20,7 @@ A full-stack, real-time chat room application built with the MERN stack (MongoDB
 - Tailwind CSS v4
 - React Router v7
 - Socket.IO Client for websocket communication
+- WebRTC API for peer-to-peer media streaming
 - Axios for HTTP requests
 - React Hot Toast for notifications
 - Lucide React for icons
@@ -30,6 +32,15 @@ A full-stack, real-time chat room application built with the MERN stack (MongoDB
 - JSON Web Tokens (JWT) for authentication
 - Zod for request validation
 - Bcrypt.js for password hashing
+
+## 🌐 WebRTC, STUN, and TURN Servers
+
+This application utilizes **WebRTC** for real-time audio/video communication. To establish peer-to-peer connections across different network topologies, STUN and TURN servers are involved:
+
+- **STUN (Session Traversal Utilities for NAT):** Helps clients discover their public IP address so they can connect directly. Public STUN servers (like Google's `stun:stun.l.google.com:19302`) are often sufficient for basic usage.
+- **TURN (Traversal Using Relays around NAT):** Acts as a fallback relay for media traffic when direct peer-to-peer connections fail due to strict NATs or firewalls. For production environments, it is highly recommended to configure a reliable TURN server (e.g., Coturn, Twilio, or Metered).
+
+Ensure you configure your ICE servers (STUN/TURN) properly in the frontend WebRTC `RTCPeerConnection` setup for reliable connectivity.
 
 ## 📦 Prerequisites
 

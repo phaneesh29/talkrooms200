@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { Room } from '../models/room.model.js';
+import { HEALTH_URL } from '../constants.js';
 
 
 export const initCronJobs = () => {
@@ -18,10 +19,10 @@ export const initCronJobs = () => {
         }
     });
 
-    // ping our own health endpoint every 30 seconds to prevent sleep / verify uptime
+
     cron.schedule('*/30 * * * * *', async () => {
         try {
-            const url = process.env.HEALTH_URL || 'https://talkrooms200.onrender.com/api/health';
+            const url = HEALTH_URL;
             const res = await fetch(url);
             if (res.ok) {
                 console.log(`Health ping succeeded at ${new Date().toISOString()}`);

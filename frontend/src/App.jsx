@@ -4,7 +4,6 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ChatRoom from './pages/ChatRoom'
-import SystemStatus from './components/SystemStatus';
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react'
 import socket from './utils/socket'
@@ -40,7 +39,6 @@ const App = () => {
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
       </Routes>
-      <SystemStatus />
     </div>
   )
 }
