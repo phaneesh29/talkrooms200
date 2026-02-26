@@ -8,12 +8,12 @@ const Modal = ({ isOpen, onClose, title, children }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in p-4">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 bg-black/40 backdrop-blur-md"
                 onClick={onClose}
             />
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-md glass-card rounded-2xl shadow-2xl p-6 border border-white/10 animate-fade-in scale-100 min-h-[150px]">
+            <div className="relative w-full max-w-md bg-[#0f1225] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] p-6 border border-white/10 animate-fade-in scale-100 min-h-[150px]">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-semibold text-white tracking-tight">{title}</h3>

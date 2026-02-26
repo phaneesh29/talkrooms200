@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast'
 import { Mail, Lock, Eye, EyeOff, Loader2, MessageSquare, User2 } from 'lucide-react'
 import { Link, useNavigate, useLocation } from 'react-router'
 import axios from '../utils/axios'
+import Modal from '../components/Modal'
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,13 +15,25 @@ const Login = () => {
   })
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showConsent, setShowConsent] = useState(false)
 
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const proceedWithLogin = async () => {
+    // Attempt storage access for Safari cross-site
+    if (document.hasStorageAccess && document.requestStorageAccess) {
+      try {
+        const hasAccess = await document.hasStorageAccess();
+        if (!hasAccess) {
+          await document.requestStorageAccess();
+        }
+      } catch (err) {
+        console.warn("Storage access denied", err);
+      }
+    }
+
     setLoading(true)
     try {
       const response = await axios.post('/auth/login', user)
@@ -37,11 +50,50 @@ const Login = () => {
     }
   }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    const hasConsent = localStorage.getItem('cookieConsent') === 'true';
+    if (!hasConsent) {
+      setShowConsent(true);
+      return;
+    }
+
+    proceedWithLogin()
+  }
+
+  const handleAcceptCookies = async () => {
+    localStorage.setItem('cookieConsent', 'true');
+    setShowConsent(false);
+    await proceedWithLogin();
+  }
+
+  const handleDeclineCookies = () => {
+    setShowConsent(false);
+    toast.error("Cookie permission is required to log in.");
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
       {/* Background Blobs */}
       <div className="glow-blob bg-purple-600/30 w-[400px] h-[400px] top-[-100px] left-[-100px] animate-float"></div>
       <div className="glow-blob bg-blue-600/30 w-[500px] h-[500px] bottom-[-200px] right-[-100px] animate-float" style={{ animationDelay: '2s' }}></div>
+
+      <Modal isOpen={showConsent} onClose={handleDeclineCookies} title="Cookie Consent">
+        <div className="flex flex-col gap-4 mt-2">
+          <p className="text-sm text-purple-100/80 leading-relaxed font-medium">
+            To ensure a secure and persistent authentication session, Talkrooms requires permission to set cookies. This is particularly necessary for browsers with strict privacy controls, such as Safari.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-4">
+            <button onClick={handleDeclineCookies} className="px-5 py-2.5 text-sm font-medium text-purple-200/60 hover:text-white hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-white/10">
+              Decline
+            </button>
+            <button onClick={handleAcceptCookies} className="px-5 py-2.5 text-sm font-semibold bg-white text-black hover:bg-gray-200 rounded-xl shadow-lg transition-colors">
+              Accept Cookies
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <div className="w-full max-w-md animate-fade-in relative z-10">
         <div className="text-center mb-8">
