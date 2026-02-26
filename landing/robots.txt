@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://try-talkrooms200.vercel.app/sitemap.xml
