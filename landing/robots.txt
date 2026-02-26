@@ -1,4 +1,12 @@
+# TalkRooms Landing Page
+# https://try-talkrooms200.vercel.app
+
 User-agent: *
 Allow: /
+Disallow: /google6611f56d5341a892.html
 
+# Sitemaps
 Sitemap: https://try-talkrooms200.vercel.app/sitemap.xml
+
+# Host
+Host: https://try-talkrooms200.vercel.app
