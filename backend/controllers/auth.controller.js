@@ -1,4 +1,4 @@
-import { JWT_REFRESH_SECRET } from "../constants.js";
+import { JWT_REFRESH_SECRET, ACCESS_TOKEN_COOKIE_OPTIONS, REFRESH_TOKEN_COOKIE_OPTIONS } from "../constants.js";
 import { User } from "../models/user.model.js";
 import { generateAccessToken, generateRefreshToken, hashToken } from "../utils/token.js";
 import jwt from "jsonwebtoken";
@@ -36,7 +36,7 @@ export const loginController = asyncHandler(async (req, res) => {
     const refreshToken = generateRefreshToken(user._id);
     user.refreshToken = hashToken(refreshToken);
     await user.save();
-    return res.status(200).cookie("accessToken", accessToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 60 * 60 * 1000, }).cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 7 * 24 * 60 * 60 * 1000 }).json({ message: 'Login successful' });
+    return res.status(200).cookie("accessToken", accessToken, ACCESS_TOKEN_COOKIE_OPTIONS).cookie("refreshToken", refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS).json({ message: 'Login successful' });
 });
 
 export const profileController = asyncHandler(async (req, res) => {
@@ -54,7 +54,7 @@ export const logoutController = asyncHandler(async (req, res) => {
         const hashed = hashToken(refreshToken);
         await User.findOneAndUpdate({ refreshToken: hashed }, { $unset: { refreshToken: 1 } });
     }
-    return res.clearCookie("accessToken").clearCookie("refreshToken").status(200).json({ message: 'Logout successful' });
+    return res.clearCookie("accessToken", ACCESS_TOKEN_COOKIE_OPTIONS).clearCookie("refreshToken", REFRESH_TOKEN_COOKIE_OPTIONS).status(200).json({ message: 'Logout successful' });
 });
 
 export const refreshTokenController = asyncHandler(async (req, res) => {
@@ -75,17 +75,7 @@ export const refreshTokenController = asyncHandler(async (req, res) => {
     const newRefreshToken = generateRefreshToken(user._id);
     user.refreshToken = hashToken(newRefreshToken);
     await user.save();
-    return res.cookie('accessToken', newAccessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        maxAge: 60 * 60 * 1000,
-    }).cookie('refreshToken', newRefreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-    }).status(200).json({
+    return res.cookie('accessToken', newAccessToken, ACCESS_TOKEN_COOKIE_OPTIONS).cookie('refreshToken', newRefreshToken, REFRESH_TOKEN_COOKIE_OPTIONS).status(200).json({
         success: true,
         message: 'Token refreshed',
     });
