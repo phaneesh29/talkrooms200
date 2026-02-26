@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
-import { Mail, Lock, Eye, EyeOff, Loader2, MessageSquare } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, Loader2, MessageSquare, User2 } from 'lucide-react'
 import { Link, useNavigate, useLocation } from 'react-router'
 import axios from '../utils/axios'
 
@@ -9,7 +9,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState({
-    email: "",
+    identifier: "",
     password: ""
   })
   const [loading, setLoading] = useState(false)
@@ -58,13 +58,13 @@ const Login = () => {
         >
           <div className="space-y-4">
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <User2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
-                type="email"
-                name="email"
-                value={user.email}
+                type="text"
+                name="identifier"
+                value={user.identifier}
                 onChange={handleChange}
-                placeholder="Email Address"
+                placeholder="Username or Email"
                 required
                 className="w-full pl-10 pr-3 py-3 rounded-xl glass-input"
               />

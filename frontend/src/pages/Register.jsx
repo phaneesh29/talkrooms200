@@ -63,12 +63,18 @@ const Register = () => {
                 type="text"
                 name="username"
                 value={user.username}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const val = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  setUser({ ...user, username: val });
+                }}
                 placeholder="Username"
+                pattern="^[a-z0-9]+$"
+                title="Only lowercase letters and numbers allowed. No special characters."
                 required
                 className="w-full pl-10 pr-3 py-3 rounded-xl glass-input"
               />
             </div>
+            <p className="text-xs text-purple-200/60 mt-1 pl-1">Lowercase letters and numbers only</p>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input

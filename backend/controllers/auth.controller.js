@@ -18,17 +18,19 @@ export const registerController = asyncHandler(async (req, res) => {
 });
 
 export const loginController = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
-    if (!email?.trim() || !password?.trim()) {
+    const { identifier, password } = req.body;
+    if (!identifier?.trim() || !password?.trim()) {
         return res.status(400).json({ message: 'All fields are required' });
     }
-    const user = await User.findOne({ email: email }).select("+password +refreshToken");
+    const user = await User.findOne({
+        $or: [{ email: identifier.toLowerCase() }, { username: identifier.toLowerCase() }]
+    }).select("+password +refreshToken");
     if (!user) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+        return res.status(401).json({ message: 'Invalid credentials' });
     }
     const isPasswordValid = await user.isPasswordCorrect(password);
     if (!isPasswordValid) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+        return res.status(401).json({ message: 'Invalid credentials' });
     }
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
@@ -87,4 +89,40 @@ export const refreshTokenController = asyncHandler(async (req, res) => {
         success: true,
         message: 'Token refreshed',
     });
+});
+
+export const updateProfileController = asyncHandler(async (req, res) => {
+    const { username } = req.body;
+    const userId = req.userId;
+
+    const existingUser = await User.findOne({ username, _id: { $ne: userId } });
+    if (existingUser) {
+        return res.status(409).json({ message: 'Username already in use' });
+    }
+
+    const user = await User.findByIdAndUpdate(userId, { username }, { new: true }).select("-password -refreshToken -__v");
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    return res.status(200).json({ message: 'Profile updated successfully', user });
+});
+
+export const changePasswordController = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.userId;
+
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(oldPassword);
+    if (!isPasswordValid) {
+        return res.status(401).json({ message: 'Invalid old password' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({ message: 'Password changed successfully' });
 });

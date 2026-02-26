@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import axios from '../utils/axios';
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router';
-import { Loader2, LogOut, MessageSquarePlus, Globe2, Edit2, Trash2 } from 'lucide-react';
+import { Loader2, LogOut, MessageSquarePlus, Globe2, Edit2, Trash2, User2 } from 'lucide-react';
 import socket from '../utils/socket'
 import Modal from '../components/Modal';
 import SystemStatus from '../components/SystemStatus';
@@ -99,7 +99,14 @@ const Home = () => {
             </h1>
             <p className="text-sm text-purple-200/60">{user.email}</p>
           </div>
-          <div>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/profile"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/10 hover:border-white/20 transition-all focus:outline-none focus:ring-2 focus:ring-white/50"
+            >
+              <User2 size={18} />
+              Profile
+            </Link>
             <button
               onClick={async () => {
                 try {

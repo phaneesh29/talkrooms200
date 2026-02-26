@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ChatRoom from './pages/ChatRoom'
+import Profile from './pages/Profile'
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react'
 import socket from './utils/socket'
@@ -38,6 +39,7 @@ const App = () => {
         <Route path='/chat/:room' element={<ChatRoom />} />
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
+        <Route path='/profile' element={<Profile />} />
       </Routes>
     </div>
   )
