@@ -49,7 +49,7 @@ const Register = () => {
             <MessageSquare size={32} />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Create Account</h1>
-          <p className="text-blue-200/60 mt-2">Join Talkrooms today.</p>
+          <p className="text-blue-200/60 mt-2">Join TalkRooms200 today.</p>
         </div>
 
         <form

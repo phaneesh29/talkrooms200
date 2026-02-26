@@ -82,7 +82,7 @@ const Login = () => {
       <Modal isOpen={showConsent} onClose={handleDeclineCookies} title="Cookie Consent">
         <div className="flex flex-col gap-4 mt-2">
           <p className="text-sm text-purple-100/80 leading-relaxed font-medium">
-            To ensure a secure and persistent authentication session, Talkrooms requires permission to set cookies. This is particularly necessary for browsers with strict privacy controls, such as Safari.
+            To ensure a secure and persistent authentication session, TalkRooms200 requires permission to set cookies. This is particularly necessary for browsers with strict privacy controls, such as Safari.
           </p>
           <div className="flex flex-col sm:flex-row justify-end gap-3 mt-4">
             <button onClick={handleDeclineCookies} className="px-5 py-2.5 text-sm font-medium text-purple-200/60 hover:text-white hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-white/10">
@@ -100,7 +100,7 @@ const Login = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass-card mb-4 text-purple-400">
             <MessageSquare size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Talkrooms</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">TalkRooms200<sup style={{ fontSize: '0.4em', fontWeight: 700, background: 'linear-gradient(135deg,#a78bfa,#f472b6)', color: '#fff', padding: '2px 6px', borderRadius: '6px', marginLeft: '4px', letterSpacing: '1px', verticalAlign: 'super' }}>BETA</sup></h1>
           <p className="text-purple-200/60 mt-2">Welcome back! Please sign in.</p>
         </div>
 
