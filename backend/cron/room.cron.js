@@ -1,11 +1,21 @@
 import cron from 'node-cron';
 import { Room } from '../models/room.model.js';
 import { HEALTH_URL } from '../constants.js';
+import { backupAndSendMessages } from '../utils/backupMessages.js';
 
 
 export const initCronJobs = () => {
-    cron.schedule('0 0 * * *', async () => {
-        console.log('Running daily cleanup for inactive rooms...');
+
+    cron.schedule('0 2 * * *', async () => {
+        try {
+            console.log('📦 Starting daily message backup...');
+            await backupAndSendMessages();
+        } catch (err) {
+            console.error('❌ Error during message backup:', err);
+        }
+
+
+        console.log('🧹 Running daily cleanup for inactive rooms...');
         try {
             const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
             const staleRooms = await Room.find({ lastUsedTime: { $lt: fiveDaysAgo } });
@@ -13,9 +23,9 @@ export const initCronJobs = () => {
             for (const room of staleRooms) {
                 await room.deleteOne();
             }
-            console.log(`Cleanup complete: deleted ${staleRooms.length} inactive rooms.`);
+            console.log(`✅ Cleanup complete: deleted ${staleRooms.length} inactive rooms.`);
         } catch (err) {
-            console.error("Error during room cleanup:", err);
+            console.error("❌ Error during room cleanup:", err);
         }
     });
 
