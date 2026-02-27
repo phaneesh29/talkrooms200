@@ -190,11 +190,18 @@
     </header>
 
     <main id="main-content">
-        <section class="hero container" aria-labelledby="hero-heading">
+        <section class="hero container" aria-labelledby="hero-heading" style="position: relative;">
+            <div class="particle" style="width: 8px; height: 8px; top: 15%; left: 10%; animation-duration: 4s;"></div>
+            <div class="particle" style="width: 12px; height: 12px; top: 80%; left: 15%; animation-duration: 5s; animation-delay: 1s;"></div>
+            <div class="particle" style="width: 6px; height: 6px; top: 25%; right: 45%; animation-duration: 3s; animation-delay: 0.5s;"></div>
+            <div class="particle" style="width: 10px; height: 10px; top: 75%; right: 10%; animation-duration: 4.5s; animation-delay: 1.5s;"></div>
+            <div class="particle" style="width: 7px; height: 7px; top: 40%; left: 45%; animation-duration: 3.5s; animation-delay: 0.2s;"></div>
+            <div class="particle" style="width: 5px; height: 5px; top: 60%; right: 30%; animation-duration: 3.2s; animation-delay: 0.8s;"></div>
+
             <div class="hero-content fade-in">
                 <div class="badge" role="status">🚀 Sign Up Free in Seconds</div>
                 <h1 id="hero-heading" class="hero-title">
-                    Unleash the Power of <span class="text-gradient">Voice</span>. Instantly.
+                    Unleash the Power of <span class="text-gradient shimmer-text">Voice</span>. Instantly.
                 </h1>
                 <p class="hero-subtitle">
                     Create ephemeral, safe, and anonymous voice and text chat rooms in seconds. No digital footprint.
@@ -223,7 +230,7 @@
             </div>
 
             <div class="hero-visual fade-in delay-1" aria-hidden="true">
-                <div class="glass-card mockup-card">
+                <div class="glass-card mockup-card mockup-card-animated">
                     <div class="mockup-header">
                         <span class="dot red"></span>
                         <span class="dot yellow"></span>
@@ -265,7 +272,7 @@
             </div>
 
             <div class="features-grid">
-                <article class="feature-card glass-card fade-in">
+                <article class="feature-card glass-card fade-in hover-lift">
                     <div class="feature-icon icon-purple" aria-hidden="true">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -278,7 +285,7 @@
                         instantly.</p>
                 </article>
 
-                <article class="feature-card glass-card fade-in delay-1">
+                <article class="feature-card glass-card fade-in delay-1 hover-lift">
                     <div class="feature-icon icon-blue" aria-hidden="true">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -290,7 +297,7 @@
                     </p>
                 </article>
 
-                <article class="feature-card glass-card fade-in delay-2">
+                <article class="feature-card glass-card fade-in delay-2 hover-lift">
                     <div class="feature-icon icon-pink" aria-hidden="true">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -337,7 +344,7 @@
                 <p>No hidden fees. No credit card required. Just start talking.</p>
             </div>
 
-            <div class="pricing-card glass-card fade-in">
+            <div class="pricing-card glass-card fade-in hover-lift">
                 <div class="pricing-badge">🎉 Launch Offer</div>
                 <h3 class="pricing-plan-name">TalkRooms Pro</h3>
                 <p class="pricing-description">Unlimited voice & text chat rooms with all features included.</p>

@@ -471,7 +471,7 @@ const ChatRoom = () => {
             <div className="min-w-0 flex-1">
               <h1 className="text-base sm:text-xl font-bold text-white tracking-wide flex items-center gap-2">
                 <SystemStatus variant="dot" />
-                <span className="truncate max-w-[150px] sm:max-w-[200px]">{roomData.name}</span>
+                <span className="truncate max-w-[150px] sm:max-w-[200px] shimmer-text">{roomData.name}</span>
               </h1>
               <p className="text-[10px] sm:text-xs text-purple-200/50 mt-0.5 sm:mt-1 truncate">Logged in as <span className="text-purple-300 font-medium">{user.username}</span></p>
             </div>
@@ -578,7 +578,7 @@ const ChatRoom = () => {
           <div className="mb-4 bg-purple-900/40 border border-purple-500/20 backdrop-blur-md rounded-2xl flex items-center p-3 px-5 shadow-lg max-w-full overflow-x-auto no-scrollbar gap-4">
             <div className="flex items-center gap-2 text-green-400 shrink-0">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-sm font-semibold tracking-wide">Voice Active ({voiceUsers.length}/6)</span>
+              <span className="text-sm font-semibold tracking-wide shimmer-text-blue">Voice Active ({voiceUsers.length}/6)</span>
             </div>
             <div className="h-6 w-[1px] bg-purple-500/30 mx-2 shrink-0"></div>
             <div className="flex gap-3 items-center">
@@ -601,7 +601,7 @@ const ChatRoom = () => {
           {/* Messages */}
           <div className="chat flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 scroll-smooth">
             {messages.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4 animate-scale-in">
                 <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-purple-400/50 mb-2">
                   <Send size={24} />
                 </div>
@@ -614,7 +614,7 @@ const ChatRoom = () => {
                 const showAvatar = index === 0 || messages[index - 1].sender?._id !== msg.sender?._id;
 
                 return (
-                  <div key={msg._id} className={`flex ${isMe ? "justify-end" : "justify-start"} animate-fade-in`} style={{ animationDuration: '0.3s' }}>
+                  <div key={msg._id} className={`flex ${isMe ? "justify-end" : "justify-start"} animate-scale-in`} style={{ transformOrigin: isMe ? 'bottom right' : 'bottom left' }}>
                     {!isMe && showAvatar && (
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold mr-3 flex-shrink-0 mt-1 shadow-lg">
                         {msg.sender?.username?.charAt(0).toUpperCase() || '?'}
@@ -680,7 +680,7 @@ const ChatRoom = () => {
                   onBlur={() => emitTyping(false)}
                   type="text"
                   placeholder="Type your message..."
-                  className="w-full rounded-2xl glass-input py-3 sm:py-4 pl-4 sm:pl-5 pr-12 text-[14px] sm:text-[15px] shadow-inner"
+                  className="w-full rounded-2xl glass-input py-3 sm:py-4 pl-4 sm:pl-5 pr-12 text-[14px] sm:text-[15px] shadow-inner focus:shadow-[0_0_15px_rgba(139,92,246,0.2)] transition-all"
                 />
               </div>
               <button

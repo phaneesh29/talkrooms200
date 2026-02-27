@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import axios from '../utils/axios';
 import { useNavigate, Link } from 'react-router';
-import { Loader2, ArrowLeft, User2, Lock } from 'lucide-react';
+import { Loader2, ArrowLeft, User2, Lock, Mail, Calendar } from 'lucide-react';
 
 const Profile = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Forms state
     const [username, setUsername] = useState('');
     const [updatingUsername, setUpdatingUsername] = useState(false);
 
@@ -81,21 +80,49 @@ const Profile = () => {
         );
     }
 
+    const memberSince = user?.createdAt
+        ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+        : null;
+
     return (
         <div className="min-h-screen flex flex-col items-center py-12 px-4 relative overflow-hidden">
             {/* Background Blobs */}
             <div className="glow-blob bg-blue-600/30 w-[400px] h-[400px] top-[10%] left-[10%] animate-float"></div>
             <div className="glow-blob bg-purple-600/30 w-[500px] h-[500px] bottom-[-100px] right-[-100px] animate-float" style={{ animationDelay: '1.5s' }}></div>
 
-            <div className="w-full max-w-2xl animate-fade-in relative z-10 flex flex-col gap-6">
-                <div className="flex items-center gap-4 mb-4">
+            <div className="w-full max-w-2xl relative z-10 flex flex-col gap-6">
+                {/* Back button */}
+                <div className="flex items-center gap-4 mb-2 animate-slide-up" style={{ '--stagger': '0ms' }}>
                     <Link to="/" className="p-2 glass-card rounded-xl hover:bg-white/10 transition-colors text-white">
                         <ArrowLeft size={24} />
                     </Link>
                     <h1 className="text-3xl font-bold text-white tracking-tight">Profile Settings</h1>
                 </div>
 
-                <div className="glass-card rounded-2xl p-8 space-y-6">
+                {/* Avatar Hero Card */}
+                <div className="glass-card rounded-2xl p-8 flex flex-col sm:flex-row items-center gap-6 animate-slide-up" style={{ '--stagger': '80ms' }}>
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 flex items-center justify-center text-white text-3xl font-bold avatar-ring shrink-0 border-2 border-white/20">
+                        {user?.username?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                    <div className="text-center sm:text-left">
+                        <h2 className="text-2xl font-bold shimmer-text">{user?.username}</h2>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1.5">
+                            <p className="text-sm text-purple-200/50 flex items-center gap-1.5 justify-center sm:justify-start">
+                                <Mail size={13} className="text-purple-300/50" />
+                                {user?.email}
+                            </p>
+                            {memberSince && (
+                                <p className="text-sm text-purple-200/40 flex items-center gap-1.5 justify-center sm:justify-start">
+                                    <Calendar size={13} className="text-purple-300/40" />
+                                    Member since {memberSince}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Update Username */}
+                <div className="glass-card rounded-2xl p-8 space-y-6 hover-lift animate-slide-up" style={{ '--stagger': '160ms' }}>
                     <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                         <User2 size={24} className="text-purple-400" />
                         Update Username
@@ -128,7 +155,8 @@ const Profile = () => {
                     </form>
                 </div>
 
-                <div className="glass-card rounded-2xl p-8 space-y-6">
+                {/* Change Password */}
+                <div className="glass-card rounded-2xl p-8 space-y-6 hover-lift animate-slide-up" style={{ '--stagger': '240ms' }}>
                     <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                         <Lock size={24} className="text-blue-400" />
                         Change Password

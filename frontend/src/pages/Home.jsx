@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import axios from '../utils/axios';
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router';
-import { Loader2, LogOut, MessageSquarePlus, Globe2, Edit2, Trash2, User2 } from 'lucide-react';
+import { Loader2, LogOut, MessageSquarePlus, Globe2, Edit2, Trash2, User2, Copy, Hash } from 'lucide-react';
 import socket from '../utils/socket'
 import Modal from '../components/Modal';
 import SystemStatus from '../components/SystemStatus';
@@ -85,19 +85,28 @@ const Home = () => {
     )
   }
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
     <main className="min-h-screen relative overflow-hidden flex flex-col items-center py-12">
       {/* Background Blobs */}
       <div className="glow-blob bg-purple-600/20 w-[600px] h-[600px] absolute top-[-200px] left-[-200px] animate-float"></div>
       <div className="glow-blob bg-blue-600/20 w-[600px] h-[600px] absolute bottom-[-200px] right-[-200px] animate-float" style={{ animationDelay: '2s' }}></div>
 
-      <div className="w-full max-w-5xl px-6 relative z-10 animate-fade-in flex flex-col gap-6">
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 glass-card p-6 rounded-2xl w-full">
+      <div className="w-full max-w-5xl px-6 relative z-10 flex flex-col gap-6">
+        {/* Header */}
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 glass-card p-6 rounded-2xl w-full animate-slide-up hover-lift" style={{ '--stagger': '0ms' }}>
           <div>
+            <p className="text-sm text-purple-200/50 mb-1">{getGreeting()},</p>
             <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
-              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">{user.username}</span>!
+              <span className="shimmer-text">{user.username}</span>
             </h1>
-            <p className="text-sm text-purple-200/60">{user.email}</p>
+            <p className="text-sm text-purple-200/40">{user.email}</p>
           </div>
           <div className="flex items-center gap-3">
             <Link
@@ -127,8 +136,25 @@ const Home = () => {
           </div>
         </header>
 
+        {/* Quick Stats */}
+        <div className="flex items-center gap-4 animate-slide-up" style={{ '--stagger': '80ms' }}>
+          <div className="glass-card rounded-xl px-5 py-3 flex items-center gap-3 hover-lift">
+            <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+              <Hash size={16} />
+            </div>
+            <div>
+              <p className="text-xs text-purple-200/50">My Rooms</p>
+              <p className="text-lg font-bold text-white">{myRooms.length}</p>
+            </div>
+          </div>
+          {myRooms.length === 0 && (
+            <p className="text-sm text-purple-200/40 ml-2">Create your first room to get started →</p>
+          )}
+        </div>
+
+        {/* Rejoin Banner */}
         {user.lastJoinedRoom && (
-          <div className="glass-card p-4 rounded-2xl w-full flex items-center justify-between border-green-500/20 bg-green-500/5 animate-fade-in group hover:bg-green-500/10 transition-colors">
+          <div className="glass-card p-4 rounded-2xl w-full flex items-center justify-between border-green-500/20 bg-green-500/5 group hover:bg-green-500/10 transition-colors animate-slide-up hover-lift" style={{ '--stagger': '160ms' }}>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400 group-hover:scale-110 transition-transform">
                 <MessageSquarePlus size={24} />
@@ -144,15 +170,29 @@ const Home = () => {
           </div>
         )}
 
+        {/* My Active Rooms */}
         {myRooms.length > 0 && (
-          <div className="glass-card p-6 rounded-2xl w-full">
+          <div className="glass-card p-6 rounded-2xl w-full animate-slide-up" style={{ '--stagger': '240ms' }}>
             <h2 className="text-xl font-semibold mb-4 text-white">My Active Rooms</h2>
             <div className="flex flex-wrap gap-4">
-              {myRooms.map(r => (
-                <div key={r._id} className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 flex flex-col min-w-[200px] transition-colors relative group">
+              {myRooms.map((r, i) => (
+                <div key={r._id} className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 flex flex-col min-w-[200px] transition-all relative group hover-lift animate-slide-up" style={{ '--stagger': `${300 + i * 80}ms` }}>
                   <Link to={`/chat/${r.code}`} className="flex-1 flex flex-col cursor-pointer pb-2">
                     <span className="font-semibold text-white">{r.name}</span>
-                    <span className="text-xs text-purple-200/60 mt-1">Code: {r.code}</span>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-[10px] text-purple-200/60 font-mono bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">{r.code}</span>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(r.code);
+                          toast.success("Room code copied!");
+                        }}
+                        className="text-purple-300/50 hover:text-purple-300 transition-colors"
+                      >
+                        <Copy size={10} />
+                      </button>
+                    </div>
                   </Link>
 
                   <div className="flex flex-row gap-2 mt-2 pt-2 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -162,7 +202,7 @@ const Home = () => {
                         setEditName(r.name);
                         setEditingRoom(r);
                       }}
-                      className="text-xs flex items-center gap-1 text-blue-300 hover:text-blue-100 bg-blue-500/10 hover:bg-blue-500/30 px-2 py-1 rounded"
+                      className="text-xs flex items-center gap-1 text-blue-300 hover:text-blue-100 bg-blue-500/10 hover:bg-blue-500/30 px-2 py-1 rounded transition-colors"
                     >
                       <Edit2 size={12} /> Edit
                     </button>
@@ -171,7 +211,7 @@ const Home = () => {
                         e.preventDefault();
                         setDeletingRoom(r);
                       }}
-                      className="text-xs flex items-center gap-1 text-red-300 hover:text-red-100 bg-red-500/10 hover:bg-red-500/30 px-2 py-1 rounded ml-auto"
+                      className="text-xs flex items-center gap-1 text-red-300 hover:text-red-100 bg-red-500/10 hover:bg-red-500/30 px-2 py-1 rounded ml-auto transition-colors"
                     >
                       <Trash2 size={12} /> Delete
                     </button>
@@ -182,7 +222,7 @@ const Home = () => {
           </div>
         )}
 
-        {/* Modals placed outside main loop */}
+        {/* Modals */}
         <Modal isOpen={!!editingRoom} onClose={() => setEditingRoom(null)} title="Update Room">
           <form className="mt-2" onSubmit={async (e) => {
             e.preventDefault();
@@ -236,9 +276,10 @@ const Home = () => {
           </div>
         </Modal>
 
+        {/* Create / Join Cards */}
         <div className="grid gap-6 md:grid-cols-2 w-full">
-          <section className="rounded-2xl glass-card p-8 group hover:-translate-y-1 transition-transform duration-300">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 mb-6 group-hover:bg-purple-500/30 transition-colors">
+          <section className="rounded-2xl glass-card p-8 group hover-lift animate-slide-up" style={{ '--stagger': '320ms' }}>
+            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 mb-6 group-hover:bg-purple-500/30 group-hover:scale-110 transition-all">
               <Globe2 size={24} />
             </div>
             <h2 className="text-xl font-semibold text-white">Create Room</h2>
@@ -272,8 +313,8 @@ const Home = () => {
             </form>
           </section>
 
-          <section className="rounded-2xl glass-card p-8 group hover:-translate-y-1 transition-transform duration-300">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 mb-6 group-hover:bg-blue-500/30 transition-colors">
+          <section className="rounded-2xl glass-card p-8 group hover-lift animate-slide-up" style={{ '--stagger': '400ms' }}>
+            <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 mb-6 group-hover:bg-blue-500/30 group-hover:scale-110 transition-all">
               <MessageSquarePlus size={24} />
             </div>
             <h2 className="text-xl font-semibold text-white">Join Room</h2>
