@@ -8,6 +8,7 @@ import Profile from './pages/Profile'
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react'
 import socket from './utils/socket'
+import { Analytics } from "@vercel/analytics/react"
 
 const App = () => {
   useEffect(() => {
@@ -17,6 +18,7 @@ const App = () => {
 
   return (
     <div className="h-full w-full">
+      <Analytics />
       <Toaster
         toastOptions={{
           style: {
