@@ -24,6 +24,7 @@ const ChatRoom = () => {
   const [inVoice, setInVoice] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [voiceUsers, setVoiceUsers] = useState([]); // List of users currently in voice
+  const [isJoiningVoice, setIsJoiningVoice] = useState(false);
   const localStreamRef = useRef(null);
   const peerConnectionsRef = useRef({}); // socketId -> RTCPeerConnection
   const audioElementsRef = useRef({}); // socketId -> <audio> element reference
@@ -242,6 +243,7 @@ const ChatRoom = () => {
   };
 
   const handleJoinVoice = async () => {
+    setIsJoiningVoice(true);
     try {
       // 1. Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
@@ -254,6 +256,8 @@ const ChatRoom = () => {
     } catch (err) {
       console.error("Microphone access denied or error:", err);
       toast.error("Could not access microphone.");
+    } finally {
+      setIsJoiningVoice(false);
     }
   };
 
@@ -519,10 +523,11 @@ const ChatRoom = () => {
               {!inVoice ? (
                 <button
                   onClick={handleJoinVoice}
-                  className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all text-xs sm:text-sm font-medium"
+                  disabled={isJoiningVoice}
+                  className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all text-xs sm:text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Phone size={14} className="sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Join Voice</span>
+                  {isJoiningVoice ? <Loader2 size={14} className="animate-spin sm:w-4 sm:h-4" /> : <Phone size={14} className="sm:w-4 sm:h-4" />}
+                  <span className="hidden sm:inline">{isJoiningVoice ? "Joining..." : "Join Voice"}</span>
                 </button>
               ) : (
                 <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 px-2 py-1.5 rounded-xl">

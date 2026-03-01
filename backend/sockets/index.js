@@ -105,9 +105,9 @@ export const initSocket = (server) => {
                 }
             });
 
-            if (voiceCount >= 6) {
+            if (voiceCount >= 10) {
                 // Reject connection if room is full
-                socket.emit("voiceError", { message: "Voice channel is full (max 6 users)." });
+                socket.emit("voiceError", { message: "Voice channel is full (max 10 users)." });
                 return;
             }
 

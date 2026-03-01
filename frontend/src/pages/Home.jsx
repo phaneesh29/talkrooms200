@@ -18,6 +18,10 @@ const Home = () => {
   const [editingRoom, setEditingRoom] = useState(null)
   const [deletingRoom, setDeletingRoom] = useState(null)
   const [editName, setEditName] = useState("")
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isUpdatingRoom, setIsUpdatingRoom] = useState(false)
+  const [isDeletingRoom, setIsDeletingRoom] = useState(false)
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false)
 
   const refreshToken = async () => {
     try {
@@ -117,7 +121,9 @@ const Home = () => {
               Profile
             </Link>
             <button
+              disabled={isLoggingOut}
               onClick={async () => {
+                setIsLoggingOut(true);
                 try {
                   await axios.get('/auth/logout');
                 } catch {
@@ -128,9 +134,9 @@ const Home = () => {
                 }
                 navigate('/login')
               }}
-              className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 transition-all focus:outline-none focus:ring-2 focus:ring-red-500/50"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 transition-all focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <LogOut size={18} />
+              {isLoggingOut ? <Loader2 size={18} className="animate-spin" /> : <LogOut size={18} />}
               Logout
             </button>
           </div>
@@ -227,6 +233,7 @@ const Home = () => {
           <form className="mt-2" onSubmit={async (e) => {
             e.preventDefault();
             if (editName && editName.trim() !== editingRoom.name) {
+              setIsUpdatingRoom(true);
               try {
                 await axios.put(`/room/${editingRoom._id}`, { name: editName });
                 toast.success("Room updated");
@@ -234,6 +241,8 @@ const Home = () => {
                 setEditingRoom(null);
               } catch (err) {
                 toast.error(err.response?.data?.message || "Failed to update room");
+              } finally {
+                setIsUpdatingRoom(false);
               }
             } else {
               setEditingRoom(null);
@@ -249,8 +258,11 @@ const Home = () => {
               autoFocus
             />
             <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setEditingRoom(null)} className="px-4 py-2 text-sm text-purple-200 hover:text-white transition-colors">Cancel</button>
-              <button type="submit" disabled={!editName.trim()} className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/25 hover:bg-blue-500 transition-colors disabled:opacity-50">Save Changes</button>
+              <button type="button" onClick={() => setEditingRoom(null)} disabled={isUpdatingRoom} className="px-4 py-2 text-sm text-purple-200 hover:text-white transition-colors disabled:opacity-50">Cancel</button>
+              <button type="submit" disabled={!editName.trim() || isUpdatingRoom} className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-lg shadow-blue-500/25 hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                {isUpdatingRoom && <Loader2 size={16} className="animate-spin" />}
+                Save Changes
+              </button>
             </div>
           </form>
         </Modal>
@@ -259,9 +271,10 @@ const Home = () => {
           <div className="mt-2">
             <p className="text-sm text-purple-200/80 mb-6">Are you sure you want to delete room <span className="font-bold text-white">'{deletingRoom?.name}'</span>? This action cannot be undone.</p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setDeletingRoom(null)} className="px-4 py-2 text-sm text-purple-200 hover:text-white transition-colors">Cancel</button>
+              <button onClick={() => setDeletingRoom(null)} disabled={isDeletingRoom} className="px-4 py-2 text-sm text-purple-200 hover:text-white transition-colors disabled:opacity-50">Cancel</button>
               <button onClick={async () => {
                 if (deletingRoom) {
+                  setIsDeletingRoom(true);
                   try {
                     await axios.delete(`/room/${deletingRoom._id}`);
                     toast.success("Room deleted");
@@ -269,9 +282,14 @@ const Home = () => {
                     setDeletingRoom(null);
                   } catch {
                     toast.error("Failed to delete room");
+                  } finally {
+                    setIsDeletingRoom(false);
                   }
                 }
-              }} className="rounded-lg bg-red-600 px-5 py-2 text-sm font-medium text-white shadow-lg shadow-red-500/25 hover:bg-red-500 transition-colors">Delete Room</button>
+              }} disabled={isDeletingRoom} className="flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2 text-sm font-medium text-white shadow-lg shadow-red-500/25 hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                {isDeletingRoom && <Loader2 size={16} className="animate-spin" />}
+                Delete Room
+              </button>
             </div>
           </div>
         </Modal>
@@ -287,12 +305,15 @@ const Home = () => {
             <form onSubmit={async (e) => {
               e.preventDefault();
               if (roomName.trim()) {
+                setIsCreatingRoom(true);
                 try {
                   const res = await axios.post('/room', { name: roomName });
                   toast.success(`Room Created! Code: ${res.data.room.code}`);
                   navigate(`/chat/${res.data.room.code}`);
                 } catch (error) {
                   toast.error(error.response?.data?.message || "Failed to create room");
+                } finally {
+                  setIsCreatingRoom(false);
                 }
               }
             }} className="mt-8 flex gap-3">
@@ -305,9 +326,10 @@ const Home = () => {
               />
               <button
                 type="submit"
-                disabled={!roomName.trim()}
-                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed"
+                disabled={!roomName.trim() || isCreatingRoom}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed"
               >
+                {isCreatingRoom && <Loader2 size={16} className="animate-spin" />}
                 Create
               </button>
             </form>
