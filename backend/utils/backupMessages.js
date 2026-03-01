@@ -7,6 +7,11 @@ import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } from '../constants.js';
  * and sends it as a document to Telegram.
  */
 export const backupAndSendMessages = async () => {
+    const tdy2am = new Date();
+    tdy2am.setHours(2, 0, 0, 0);
+    const yst2am = new Date(tdy2am);
+    yst2am.setDate(yst2am.getDate() - 1);
+
     const rooms = await Room.find().populate('host', 'username email');
 
     if (!rooms.length) {
@@ -17,7 +22,10 @@ export const backupAndSendMessages = async () => {
     const backup = [];
 
     for (const room of rooms) {
-        const messages = await Message.find({ room: room._id })
+        const messages = await Message.find({
+            room: room._id,
+            createdAt: { $gte: yst2am, $lt: tdy2am }
+        })
             .populate('sender', 'username email')
             .sort({ createdAt: 1 });
 
